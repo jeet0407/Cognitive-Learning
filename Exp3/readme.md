@@ -43,3 +43,17 @@ Utilize `03_model_infer/01_svm_infer.py` to predict emotions for model data usin
 Generate plots for Figures 6 and 7 by running:
 
 - `04_statistical_analysis/Exp3_analyse.R`
+
+--jt note
+
+instead of using R as in original project we have shifted the code into python
+
+- `04_statistical_analysis/Exp3_analyse.py`
+
+ using below listed packages 
+
+pandas 
+numpy 
+seaborn 
+matplotlib 
+statsmodels

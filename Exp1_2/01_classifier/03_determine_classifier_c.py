@@ -3,6 +3,7 @@ from sklearn import svm
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 #%%
 # we have 70 rows of testing data. 7 emotion, 10 model result for each emotion. 
 def read_data(data_file):
@@ -36,8 +37,9 @@ def plot_c_precision(min_value, max_value, X_train, y_train, X_test, y_test):
     plt.ylabel('Average correct prediction rate')
     plt.show()
 
-X_training, y_training = read_data('data/classifier_train.csv')
-X_testing, y_testing = read_data('data/classifier_test.csv')
+BASE_DIR = Path(__file__).resolve().parent.parent
+X_training, y_training = read_data(BASE_DIR / 'data' / 'classifier_train.csv')
+X_testing, y_testing = read_data(BASE_DIR / 'data' / 'classifier_test.csv')
 plot_c_precision(0.006,0.025,X_training,y_training,X_testing,y_testing)
 
 

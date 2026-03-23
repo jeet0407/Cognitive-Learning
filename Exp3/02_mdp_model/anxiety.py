@@ -3,7 +3,10 @@ import csv
 import random
 from operator import itemgetter
 import agent
+from pathlib import Path
 #%%
+
+MODEL_RESULT_FILE = Path(__file__).resolve().parent.parent / 'data' / 'model_result.csv'
 class anxious_mdp():
     def __init__(self):
         self.permitted_states = ['S','S1','P','E','G']
@@ -102,7 +105,7 @@ a.simulate_episode(terminate = "P")
 
 # %%
 import csv
-with open('data/model_result.csv','w') as new_file:
+with open(MODEL_RESULT_FILE,'w') as new_file:
     thewriter = csv.writer(new_file)
     fieldnames = ['Emotion', 'Suddenness', 'Goal_relevance', 'Conduciveness','Power']
     thewriter.writerow(fieldnames)

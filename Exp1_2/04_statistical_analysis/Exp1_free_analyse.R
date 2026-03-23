@@ -3,10 +3,20 @@ library(tidyverse)
 library(lme4)
 library(lmerTest)
 library(Cairo)
-source("theme-publication.R")
+
+args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", args, value = TRUE)
+script_dir <- if (length(file_arg) > 0) {
+    dirname(normalizePath(sub("^--file=", "", file_arg[1]), winslash = "/", mustWork = TRUE))
+} else {
+    getwd()
+}
+exp_root <- normalizePath(file.path(script_dir, ".."), winslash = "/", mustWork = TRUE)
+
+source(file.path(script_dir, "theme-publication.R"))
 
 # Exp1_human.csv for free rating human result
-data <- read.table("../data/human_free.csv", header = T, sep = ";") %>%
+data <- read.table(file.path(exp_root, "data", "human_free.csv"), header = T, sep = ";") %>%
   pivot_longer(cols = starts_with("Emo."),
                names_to = "Emotion",
                names_prefix = "Emo.",
@@ -47,7 +57,7 @@ data.h <- data %>%
 
 ## Model SVM predictions for experiment 1.
 
-data.m <- read.table("../data/svm_free_0.0032_var.csv", header = T, sep = ",") %>%
+data.m <- read.table(file.path(exp_root, "data", "svm_free_0.0032_var.csv"), header = T, sep = ",") %>%
     group_by(Story, Emotion) %>%
     summarise(Val = mean(Val)) %>%
     mutate(CI_lower = Val, CI_upper = Val)
@@ -84,7 +94,7 @@ ggplot(data.b, aes(Emotion, Val, fill = Source)) +
           legend.spacing.y = unit(0, "mm"))
 
 
-ggsave(file = "../plots/exp1_free.jpg", width=8, height=8,dpi=300)
+ggsave(file = file.path(exp_root, "plots", "exp1_free.jpg"), width=8, height=8,dpi=300)
 
 ggplot(data.b, aes(Emotion, Val, fill = Source)) +
   geom_point()

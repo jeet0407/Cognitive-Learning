@@ -1,6 +1,7 @@
 # %%
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
 # This function is for reading the file data and data labels.
 def get_human_data(filename):
@@ -27,7 +28,8 @@ def get_precision_list(data,label):
         precision_list.append(data[i][index])
     return precision_list
 
-human_data_file = 'data/Exp2_human.csv'
+BASE_DIR = Path(__file__).resolve().parent.parent
+human_data_file = BASE_DIR / 'data' / 'human_free_limit.csv'
 human_data, human_data_label= get_human_data(human_data_file)
 human_data_limit, human_data_label_limit = get_human_limit_data(human_data_file)
 # %%
