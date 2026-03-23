@@ -4,6 +4,7 @@
 # %%
 import pandas as pd
 import numpy as np
+from pathlib import Path
 # %%
 
 
@@ -35,26 +36,27 @@ def get_precision_list(data,label):
         precision_list.append(data[i][index])
     return precision_list
 
-human_data_file = 'data/Exp1_human.csv'
+BASE_DIR = Path(__file__).resolve().parent.parent
+human_data_file = BASE_DIR / 'data' / 'human_free.csv'
 human_data, human_data_label= get_human_data(human_data_file)
 
 precision_list = get_precision_list(human_data, human_data_label)
 mean = np.average(precision_list)
 variance = np.var(precision_list)
 
-print(mean,variance)
+print("mean:", mean, "variance:", variance)
 # For human_free:
 # 0.4019302024931973 0.027696655833540938
 
 #%%
 # To calculate the precision for human limited rating data
-human_limit_data_file = 'data/human_limit.csv'
+human_limit_data_file = BASE_DIR / 'data' / 'human_limit.csv'
 human_limit_data, human_limit_data_label= get_human_limit_data(human_limit_data_file)
 
 precision_list_limit = get_precision_list(human_limit_data, human_limit_data_label)
 mean_limit = np.average(precision_list_limit)
 variance_limit = np.var(precision_list_limit)
 
-print(mean_limit,variance_limit)
+print("mean:", mean_limit, "variance:", variance_limit)
 # For human_limit:
 # 0.8714285714285714 0.11204081632653061

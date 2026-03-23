@@ -2,7 +2,10 @@ import csv
 import random
 from operator import itemgetter
 import agent
+from pathlib import Path
 #%%
+MODEL_RESULT_FILE = Path(__file__).resolve().parent.parent / 'data' / 'model_result.csv'
+
 for x in range (1):
     class irritation_mdp():
         def __init__(self):
@@ -93,7 +96,7 @@ for x in range (1):
     a.train(20000)
     a.simulate_episode(terminate = "P")
 
-    with open('data/model_result.csv','a',newline='') as new_file:
+    with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
         writer_object = csv.writer(new_file)
         writer_object.writerow(['Irritation',a.sud_app,a.goal_app,a.cdc_app,a.power_app])
         new_file.close() 

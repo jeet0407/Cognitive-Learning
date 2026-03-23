@@ -3,6 +3,7 @@ from sklearn import svm
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 #%%
 # we have 70 rows of testing data. 7 emotion, 10 model result for each emotion. 
 def read_data (data_file):
@@ -36,9 +37,10 @@ def plot_c_precision(min_value, max_value, X_train, y_train, X_test, y_test):
     plt.ylabel('Average correct prediction rate')
     plt.show()
 
-x_training, y_training = read_data('data/classifier_train.csv')
-x_testing, y_testing = read_data('data/classifier_test.csv')
-plot_c_precision(0.002,0.005,x_training,y_training,x_testing)
+BASE_DIR = Path(__file__).resolve().parent.parent
+x_training, y_training = read_data(BASE_DIR / 'data' / 'classifier_train.csv')
+x_testing, y_testing = read_data(BASE_DIR / 'data' / 'classifier_test.csv')
+plot_c_precision(0.002,0.005,x_training,y_training,x_testing,y_testing)
 #%%
 # This is for plotting the classifier with a range of c, so that we can compare the y-axie
 # and figure out the suitable c value range for fitting human data.

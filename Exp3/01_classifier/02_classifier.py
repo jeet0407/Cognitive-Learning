@@ -2,6 +2,7 @@
 import numpy as np
 import csv
 from scipy.stats import halfnorm
+from pathlib import Path
 #%%
 
 # Random Value Generators
@@ -36,9 +37,11 @@ def generate_sample_data(n=None, filename=None):
                 row = [emotion] + get_random_values(values)
                 thewriter.writerow(row)
 
-filename_train = 'data/classifier_train.csv'
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+filename_train = BASE_DIR / 'data' / 'classifier_train.csv'
 generate_sample_data(n=400, filename=filename_train)
 
-filename_test = "data/classifier_test.csv"
+filename_test = BASE_DIR / 'data' / 'classifier_test.csv'
 generate_sample_data(n=10, filename=filename_test)
 

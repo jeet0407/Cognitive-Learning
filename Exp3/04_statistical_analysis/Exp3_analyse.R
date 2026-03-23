@@ -2,7 +2,17 @@
 library(tidyverse)
 library(lme4)
 library(lmerTest)
-source("theme-publication.R")
+
+args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", args, value = TRUE)
+script_dir <- if (length(file_arg) > 0) {
+  dirname(normalizePath(sub("^--file=", "", file_arg[1]), winslash = "/", mustWork = TRUE))
+} else {
+  getwd()
+}
+exp_root <- normalizePath(file.path(script_dir, ".."), winslash = "/", mustWork = TRUE)
+
+source(file.path(script_dir, "theme-publication.R"))
 
 
 
@@ -10,7 +20,7 @@ source("theme-publication.R")
 # free rating #
 ######################
 
-data <- read.table("../data/human_free_limit.csv", header = T, sep = ";") %>%
+data <- read.table(file.path(exp_root, "data", "human_free_limit.csv"), header = T, sep = ";") %>%
   pivot_longer(cols = starts_with("Emo."),
                names_to = "Emotion",
                names_prefix = "Emo.",
@@ -28,7 +38,7 @@ data.h <- data %>% group_by(Story, Emotion) %>%
          CI_upper = Val + 1.96*SE) %>%
   dplyr::select(Story, Emotion, Val, CI_lower, CI_upper)
 
-data.m <- read.table("../data/svm_free_0.0013_var.csv", header = T, sep = ",") %>%
+data.m <- read.table(file.path(exp_root, "data", "svm_free_0.0013_var.csv"), header = T, sep = ",") %>%
   group_by(Story, Emotion) %>%
   summarise(Val = mean(Val)) %>%
   mutate(CI_lower = Val, CI_upper = Val)
@@ -71,7 +81,7 @@ ggplot(data.b, aes(Emotion, Val, fill = Source)) +
         legend.box.background = element_rect(colour = "black",fill="transparent"),
         legend.spacing.y = unit(0, "mm"))
 
-ggsave(file = "../plots/exp3_free.jpg", width=8, height=8)
+ggsave(file = file.path(exp_root, "plots", "exp3_free.jpg"), width=8, height=8)
 
 ## Both data, long form
 data.bl <- data %>% group_by(Story, Emotion) %>% summarise(Val = mean(Val)) %>%
@@ -97,7 +107,7 @@ sqrt(data.bl%>%ungroup() %>%summarise(d=mean(d)))
 
 
 
-data2 <- read.table("../data/human_free_limit.csv", header = T, sep = ";") %>%
+data2 <- read.table(file.path(exp_root, "data", "human_free_limit.csv"), header = T, sep = ";") %>%
   pivot_longer(cols = starts_with("mc"),
                names_to = "Emotion",
                names_prefix = "mc.",
@@ -115,7 +125,7 @@ data.h2 <- data2 %>% group_by(Story, Emotion) %>%
          CI_upper = pmin(Val + 1.96*SE, 1)) %>%
   dplyr::select(Story, Emotion, Val, CI_lower, CI_upper)
 
-data.m2 <- read.table("../data/svm_limit_0.0034_var.csv", 
+data.m2 <- read.table(file.path(exp_root, "data", "svm_limit_0.0034_var.csv"), 
                       header = T, sep = ",") %>%
   group_by(Story, Emotion) %>%
   summarise(Val = mean(Val))
@@ -155,7 +165,7 @@ ggplot(data.b2, aes(Emotion, Val, fill = Source)) +
         legend.box.background = element_rect(colour = "black",fill="transparent"),
         legend.spacing.y = unit(0, "mm"))
 
-ggsave(file = "../plots/exp3_limit.jpg", width=8, height=8)
+ggsave(file = file.path(exp_root, "plots", "exp3_limit.jpg"), width=8, height=8)
 
 ## Both data, long form
 data.bl2 <- data2 %>% group_by(Story, Emotion) %>% summarise(Val = mean(Val)) %>%

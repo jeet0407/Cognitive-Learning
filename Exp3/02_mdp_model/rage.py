@@ -3,7 +3,10 @@ import csv
 import random
 from operator import itemgetter
 import agent
+from pathlib import Path
 #%%
+
+MODEL_RESULT_FILE = Path(__file__).resolve().parent.parent / 'data' / 'model_result.csv'
 
 class rage_mdp():
     def __init__(self):
@@ -92,7 +95,7 @@ a = agent.agent(rage_mdp())
 a.train(30000)
 a.simulate_episode(terminate = "P")
 
-with open('data/model_result.csv','a',newline='') as new_file:
+with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
     thewriter = csv.writer(new_file)
     thewriter.writerow(['Rage',a.sud_app,a.goal_app,a.cdc_app,a.power_app])
     new_file.close()  

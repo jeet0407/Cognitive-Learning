@@ -3,15 +3,20 @@ from sklearn import svm
 import pandas as pd
 import numpy as np
 import csv
+from pathlib import Path
 #%%
 def read_data(data_file):
     data = pd.read_csv(data_file)
+    data.columns = data.columns.str.strip()
+    if 'Emotion' in data.columns:
+        data['Emotion'] = data['Emotion'].astype(str).str.strip()
     X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power']].values
     y = data['Emotion'].values
     return X, y
 
-X_training, y_training = read_data('data/classifier_train.csv')
-X_testing, y_testing = read_data('data/model_result.csv')
+BASE_DIR = Path(__file__).resolve().parent.parent
+X_training, y_training = read_data(BASE_DIR / 'data' / 'classifier_train.csv')
+X_testing, y_testing = read_data(BASE_DIR / 'data' / 'model_result.csv')
 
 target_names = list(dict.fromkeys(y_training))
 
@@ -36,12 +41,12 @@ def generate_prediction_result (sample, filename):
 # 34 represents modeling 34 participants
 
 # Define output filename
-filename_free = 'data/svm_free_0.0013_var_.csv'
+filename_free = BASE_DIR / 'data' / 'svm_free_0.0013_var.csv'
 samples = np.random.normal(13, np.sqrt(1), 34) / 10000
 generate_prediction_result(samples,filename_free)
 
 # A normal distribution for c with mean =0.0034, var = 0.001
-filename_limit = 'data/svm_limit_0.0034_var_.csv'
+filename_limit = BASE_DIR / 'data' / 'svm_limit_0.0034_var.csv'
 samples_limit = np.random.normal(34, np.sqrt(10), 34) / 10000
 generate_prediction_result(samples_limit,filename_limit)
     

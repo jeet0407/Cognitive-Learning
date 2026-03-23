@@ -44,3 +44,18 @@ Generate plots for Figures 4 and 5 by running:
 
 - `04_statistical_analysis/Exp1_free_analyse.R`
 - `04_statistical_analysis/Exp2_limit_analyse.R`
+
+--jt note
+
+instead of using R as in original project we have shifted the code into python
+
+- `04_statistical_analysis/Exp1_free_analyse.py`
+- `04_statistical_analysis/Exp2_limit_analyse.py`
+
+ using below listed packages 
+
+pandas 
+numpy 
+seaborn 
+matplotlib 
+statsmodels
