@@ -2,7 +2,6 @@
 
 ## **Sequence of Execution**
 
-
 ### **1. Determining the Classifier**
 The following steps are dedicated to analyzing human data, generating training and testing data, and determining the classifiers.
 
