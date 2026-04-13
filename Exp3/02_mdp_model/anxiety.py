@@ -7,6 +7,7 @@ from pathlib import Path
 #%%
 
 MODEL_RESULT_FILE = Path(__file__).resolve().parent.parent / 'data' / 'model_result.csv'
+random.seed(4101)
 class anxious_mdp():
     def __init__(self):
         self.permitted_states = ['S','S1','P','E','G']
@@ -107,8 +108,8 @@ a.simulate_episode(terminate = "P")
 import csv
 with open(MODEL_RESULT_FILE,'w') as new_file:
     thewriter = csv.writer(new_file)
-    fieldnames = ['Emotion', 'Suddenness', 'Goal_relevance', 'Conduciveness','Power']
+    fieldnames = ['Emotion', 'Suddenness', 'Goal_relevance', 'Conduciveness','Power','Effort']
     thewriter.writerow(fieldnames)
-    thewriter.writerow(['Anxiety',a.sud_app,a.goal_app,a.cdc_app,a.power_app])
+    thewriter.writerow(['Anxiety',a.sud_app,a.goal_app,a.cdc_app,a.power_app,a.appraise_effort()])
     new_file.close()
 # %%

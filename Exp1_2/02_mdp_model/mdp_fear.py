@@ -6,6 +6,7 @@ from pathlib import Path
 #%%
 
 MODEL_RESULT_FILE = Path(__file__).resolve().parent.parent / 'data' / 'model_result.csv'
+random.seed(3102)
 for x in range (1):
     class fear_mdp():
         def __init__(self):
@@ -99,7 +100,7 @@ for x in range (1):
     with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
         writer_object = csv.writer(new_file)
         writer_object.writerow(['Fear',a.sud_app,a.goal_app,a.cdc_app,
-        a.power_app])
+        a.power_app,a.appraise_effort()])
         new_file.close()   
 
 

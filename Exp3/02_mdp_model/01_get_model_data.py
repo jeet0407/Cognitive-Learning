@@ -11,7 +11,7 @@ MODEL_RESULT_FILE = BASE_DIR / 'data' / 'model_result.csv'
 with open(MODEL_RESULT_FILE, "w") as new_file:
     writer = csv.writer(new_file)
     fieldnames = ['Emotion', 'Suddenness', 'Goal_relevance', 'Conduciveness', 
-    'Power' ]
+    'Power', 'Effort' ]
     writer.writerow(fieldnames)
 
 #%%

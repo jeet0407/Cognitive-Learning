@@ -3,6 +3,7 @@ from operator import itemgetter
 import csv
 
 class agent():
+    EFFORT_HORIZON = 20
     def __init__(self,mdp):
         self.epsilon = 0.3
         self.gamma = 0.9
@@ -137,6 +138,7 @@ class agent():
                 print("Goal relevance:\t", round(self.appraise_goal_relevance(),4))
                 print("Conduciveness:\t", round(self.appraise_conduciveness(),4))
                 print("Power:\t\t", round(self.appraise_power(),4))
+                print("Effort:\t\t", round(self.appraise_effort(),4))
                 # print("In standard:\t", round(self.appraise_instandard(),4))
                 return
 
@@ -171,3 +173,70 @@ class agent():
     def appraise_conduciveness(self):
         self.cdc_app = max(-1,min(1, self.td_error))/2+0.5
         return self.cdc_app
+
+    def _goal_states(self):
+        # Goal states are represented as G-like states in this codebase (G, G_plus, ...).
+        goals = [s for s in self.mdp.t.keys() if s.startswith("G")]
+        return set(goals)
+
+    def _policy_action(self, state):
+        # At appraisal event state, use chosen action; otherwise use greedy learned policy.
+        if state == self.mdp.chosen_state and self.mdp.chosen_action in self.mdp.t.get(state, {}):
+            return self.mdp.chosen_action
+        if state in self.q and len(self.q[state]) > 0:
+            return max(self.q[state].items(), key=itemgetter(1))[0]
+        actions = list(self.mdp.t.get(state, {}).keys())
+        return actions[0] if len(actions) > 0 else None
+
+    def _expected_steps_to_goal(self, state, horizon=None):
+        if horizon is None:
+            horizon = self.EFFORT_HORIZON
+        goals = self._goal_states()
+        memo = {}
+        visiting = set()
+
+        def dfs(s, depth):
+            key = (s, depth)
+            if key in memo:
+                return memo[key]
+            if s in goals:
+                memo[key] = 0.0
+                return 0.0
+            if depth <= 0 or key in visiting:
+                return None
+            action = self._policy_action(s)
+            if action is None or action not in self.mdp.t.get(s, {}):
+                return None
+            visiting.add(key)
+            expected = 1.0
+            for s2, prob in self.mdp.t[s][action].items():
+                if prob <= 0:
+                    continue
+                child = dfs(s2, depth - 1)
+                if child is None:
+                    visiting.remove(key)
+                    return None
+                expected += prob * child
+            visiting.remove(key)
+            memo[key] = expected
+            return expected
+
+        return dfs(state, horizon)
+
+    def appraise_effort(self):
+        """
+        Effort formula used in this ablation:
+            Effort = clip(E[steps_to_goal | s] / H, 0, 1)
+        where H is the fixed horizon cap. If goal is unreachable within H,
+        Effort is set to 1.0.
+        """
+        state = self.mdp.chosen_state
+        if state is None:
+            self.effort_app = 1.0
+            return self.effort_app
+        expected_steps = self._expected_steps_to_goal(state, self.EFFORT_HORIZON)
+        if expected_steps is None:
+            self.effort_app = 1.0
+        else:
+            self.effort_app = max(0.0, min(1.0, expected_steps / self.EFFORT_HORIZON))
+        return self.effort_app

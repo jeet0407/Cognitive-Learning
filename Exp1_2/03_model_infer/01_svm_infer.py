@@ -4,11 +4,15 @@ import pandas as pd
 import numpy as np
 import csv
 from pathlib import Path
+import json
 #%%
+
+SEED = 9701
+np.random.seed(SEED)
 
 def read_data(data_file):
     data = pd.read_csv(data_file)
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power']].values
+    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Effort']].values
     y = data['Emotion'].values
     return X, y
 
@@ -17,6 +21,21 @@ X_training, y_training = read_data(BASE_DIR / 'data' / 'classifier_train.csv')
 X_testing, y_testing = read_data(BASE_DIR / 'data' / 'model_result.csv')
 
 target_names = list(dict.fromkeys(y_training))
+
+def load_tuned_c():
+    defaults = {
+        "free": {"c_mean": 0.0032, "c_var": 0.0002},
+        "limit": {"c_mean": 0.014, "c_var": 0.0056},
+    }
+    c_file = BASE_DIR / 'data' / 'c_tuned.json'
+    if not c_file.exists():
+        return defaults
+    with open(c_file, 'r', encoding='utf-8') as fp:
+        tuned = json.load(fp)
+    for k, v in defaults.items():
+        if k not in tuned:
+            tuned[k] = v
+    return tuned
 
 def generate_prediction_result (sample, filename):
 # Write header to the output file
@@ -35,15 +54,22 @@ def generate_prediction_result (sample, filename):
                     writer.writerow([c, target_names[i], target_name, prob])
 
 # Generate random samples from a normal distribution for the C parameter
-# A normal distribution for c with mean = 0.0032, var = 0.0002
 # Define output filename
 filename_free = BASE_DIR / 'data' / 'svm_free_0.0032_var.csv'
-samples = np.random.normal(32, np.sqrt(2), 42) / 10000
+tuned = load_tuned_c()
+samples = np.random.normal(
+    tuned['free']['c_mean'],
+    np.sqrt(max(tuned['free']['c_var'], 1e-8)),
+    42
+)
 generate_prediction_result(samples,filename_free)
 
-# A normal distribution for c with mean = 0.014, var = 0.0056
 filename_limit = BASE_DIR / 'data' / 'svm_limit_0.014_var.csv'
-samples_limit = np.random.normal(140, np.sqrt(56), 30) / 10000
+samples_limit = np.random.normal(
+    tuned['limit']['c_mean'],
+    np.sqrt(max(tuned['limit']['c_var'], 1e-8)),
+    30
+)
 generate_prediction_result(samples_limit,filename_limit)
 
 

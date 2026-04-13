@@ -7,6 +7,7 @@ from pathlib import Path
 #%%
 
 MODEL_RESULT_FILE = Path(__file__).resolve().parent.parent / 'data' / 'model_result.csv'
+random.seed(3105)
 
 
 class pride_mdp():
@@ -110,5 +111,5 @@ a.simulate_episode(terminate = "G_plus")
 with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
     writer_object = csv.writer(new_file)
     writer_object.writerow(['Pride',a.sud_app,a.goal_app,a.cdc_app,
-        a.power_app])
+        a.power_app,a.appraise_effort()])
     new_file.close() 
