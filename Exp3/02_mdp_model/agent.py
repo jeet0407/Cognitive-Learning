@@ -15,6 +15,8 @@ class agent():
         self.old_q = 0
         self.t_hat = {}
         self.max_q_table = 0
+        self.current_step_count = 0
+        self.max_episode_steps = max(1, len(getattr(self.mdp, 'permitted_states', [])) - 1)
         #Q table is for every State Action pair.
         
         for s in self.mdp.t.keys():
@@ -117,9 +119,14 @@ class agent():
         # self.terminate_else = terminate_else
         self.mdp.make_transition(story_mode = True) 
         self.mdp.reset()
+        step_count = 0
+        max_steps = self.get_max_steps()
+        self.max_episode_steps = max_steps
 
         while True:
             self.do_step()
+            step_count += 1
+            self.current_step_count = step_count
             if self.mdp.terminal:
                 return
 
@@ -130,15 +137,20 @@ class agent():
                 # self.choose_action_epsilon_greedy()
                 self.get_max_q_table()
                 rounded_tde = [round(num,3)for num in self.mdp.tde]
+                self.compute_appraisals(step_count=step_count, max_steps=max_steps)
                 print("Q value:\t",self.q)
                 print("TDE list:\t", rounded_tde)
                 print("Manual terminate")
-                print("Suddenness:\t", round(self.appraise_suddenness(),4))
-                print("Goal relevance:\t", round(self.appraise_goal_relevance(),4))
-                print("Conduciveness:\t", round(self.appraise_conduciveness(),4))
-                print("Power:\t\t", round(self.appraise_power(),4))
+                print("Suddenness:\t", round(self.sud_app,4))
+                print("Goal relevance:\t", round(self.goal_app,4))
+                print("Conduciveness:\t", round(self.cdc_app,4))
+                print("Power:\t\t", round(self.power_app,4))
+                print("Urgency:\t", round(self.urg_app,4))
                 # print("In standard:\t", round(self.appraise_instandard(),4))
                 return
+
+    def get_max_steps(self):
+        return max(1, getattr(self.mdp, 'max_steps', len(getattr(self.mdp, 'permitted_states', [])) - 1))
 
     def appraise_power(self):
         # If two q are very high, the power is very low
@@ -171,3 +183,19 @@ class agent():
     def appraise_conduciveness(self):
         self.cdc_app = max(-1,min(1, self.td_error))/2+0.5
         return self.cdc_app
+
+    def appraise_urgency(self, step_count, max_steps):
+        if max_steps <= 0:
+            self.urg_app = 0
+        else:
+            self.urg_app = min(1, step_count / max_steps)
+        return self.urg_app
+
+    def compute_appraisals(self, step_count, max_steps):
+        return (
+            self.appraise_suddenness(),
+            self.appraise_goal_relevance(),
+            self.appraise_conduciveness(),
+            self.appraise_power(),
+            self.appraise_urgency(step_count, max_steps),
+        )

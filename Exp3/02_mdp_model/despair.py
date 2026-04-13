@@ -96,5 +96,5 @@ a.simulate_episode(terminate = "P")
 # %%
 with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
     thewriter = csv.writer(new_file)
-    thewriter.writerow(['Despair',a.sud_app,a.goal_app,a.cdc_app,a.power_app])
-    new_file.close() 
+    thewriter.writerow(['Despair',a.sud_app,a.goal_app,a.cdc_app,a.power_app,a.urg_app])
+    new_file.close()  

@@ -96,11 +96,11 @@ for x in range (1):
     a.train(i_max=20000)
     a.simulate_episode(terminate = "P")
 
-    with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
+with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
         writer_object = csv.writer(new_file)
         writer_object.writerow(['Fear',a.sud_app,a.goal_app,a.cdc_app,
-        a.power_app])
-        new_file.close()   
+        a.power_app,a.urg_app])
+        new_file.close() 
 
 
 # %%

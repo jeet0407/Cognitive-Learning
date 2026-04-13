@@ -8,7 +8,7 @@ from pathlib import Path
 # we have 70 rows of testing data. 7 emotion, 10 model result for each emotion. 
 def read_data(data_file):
     data = pd.read_csv(data_file)
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power']].values
+    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency']].values
     y = data['Emotion'].values
     return X, y
 
