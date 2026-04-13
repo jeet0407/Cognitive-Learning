@@ -5,16 +5,26 @@ import numpy as np
 import csv
 from pathlib import Path
 import json
+import os
 #%%
-SEED = 9803
-np.random.seed(SEED)
+def get_seed():
+    seed_env = os.getenv("RUN_SEED")
+    return int(seed_env) if seed_env else 0
+
+def feature_columns():
+    cols = ['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power']
+    if os.getenv("APPRAISAL_VARIANT", "baseline").lower() == "effort":
+        cols.append('Effort')
+    return cols
+
+np.random.seed(get_seed() + 601)
 
 def read_data(data_file):
     data = pd.read_csv(data_file)
     data.columns = data.columns.str.strip()
     if 'Emotion' in data.columns:
         data['Emotion'] = data['Emotion'].astype(str).str.strip()
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Effort']].values
+    X = data[feature_columns()].values
     y = data['Emotion'].values
     return X, y
 
@@ -47,7 +57,9 @@ def generate_prediction_result (sample, filename):
         writer.writerow(fieldnames)
 
     for c in sample:
-        svc = svm.SVC(kernel='linear', C=c, probability=True).fit(X_training,y_training)
+        svc = svm.SVC(
+            kernel='linear', C=c, probability=True, random_state=get_seed() + 602
+        ).fit(X_training,y_training)
         for i in range(4):
             for e, target_name in enumerate(target_names):
                 with open(filename, 'a', newline='') as new_file:

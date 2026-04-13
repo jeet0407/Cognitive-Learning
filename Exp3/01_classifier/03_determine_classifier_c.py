@@ -5,16 +5,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 import json
+import os
 #%%
+
+def get_seed():
+    seed_env = os.getenv("RUN_SEED")
+    return int(seed_env) if seed_env else 0
+
+def feature_columns():
+    cols = ['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power']
+    if os.getenv("APPRAISAL_VARIANT", "baseline").lower() == "effort":
+        cols.append('Effort')
+    return cols
 # we have 70 rows of testing data. 7 emotion, 10 model result for each emotion. 
 def read_data (data_file):
     data = pd.read_csv(data_file)
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Effort']].values
+    X = data[feature_columns()].values
     y = data['Emotion'].values
     return X,y
 
 def predict_with_svm(c,x_train, y_train, X_test):
-    svc = svm.SVC(kernel='linear', C=c, probability=True).fit(x_train,y_train)
+    svc = svm.SVC(kernel='linear', C=c, probability=True, random_state=get_seed() + 401).fit(x_train,y_train)
     predictions = [svc.predict_proba(x.reshape(1, -1)).tolist()[0] for x in X_test]
     return predictions
 

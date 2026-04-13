@@ -1,0 +1,13 @@
+variant,runtime_metric,mean_s,std_s,n
+baseline,exp1_model_gen_s,4.504496000008658,0.0,1
+baseline,exp1_full_s,571.2146604000009,0.0,1
+baseline,exp3_model_gen_s,3.5436944000102812,0.0,1
+baseline,exp3_full_s,308.19770300001255,0.0,1
+effort,exp1_model_gen_s,4.638053200003924,0.0,1
+effort,exp1_full_s,612.5947327999893,0.0,1
+effort,exp3_model_gen_s,3.2829716999985976,0.0,1
+effort,exp3_full_s,250.22327440002118,0.0,1
+delta_effort_minus_baseline,exp1_model_gen_s,0.13355719999526627,,
+delta_effort_minus_baseline,exp1_full_s,41.38007239998842,,
+delta_effort_minus_baseline,exp3_model_gen_s,-0.26072270001168363,,
+delta_effort_minus_baseline,exp3_full_s,-57.97442859999137,,

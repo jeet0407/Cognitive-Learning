@@ -1,10 +1,15 @@
 import random
 from operator import itemgetter
 import csv
+import os
 
 class agent():
     EFFORT_HORIZON = 20
     def __init__(self,mdp):
+        seed_env = os.getenv("RUN_SEED")
+        if seed_env is not None and seed_env != "":
+            # Deterministic RL/MDP stochastic behavior per benchmark run.
+            random.seed(int(seed_env))
         self.epsilon = 0.3
         self.gamma = 0.9
         # discount factor not so important

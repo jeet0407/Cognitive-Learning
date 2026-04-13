@@ -3,11 +3,18 @@ import numpy as np
 import csv
 from scipy.stats import halfnorm
 from pathlib import Path
+import os
 #%%
 
-# Reproducible synthetic sampling for Effort ablation.
-SEED = 9603
-np.random.seed(SEED)
+def get_seed():
+    seed_env = os.getenv("RUN_SEED")
+    return int(seed_env) if seed_env else 0
+
+def use_effort():
+    return os.getenv("APPRAISAL_VARIANT", "baseline").lower() == "effort"
+
+# Reproducible synthetic sampling for benchmark run.
+np.random.seed(get_seed() + 201)
 
 # Random Value Generators
 generators = {
@@ -25,18 +32,26 @@ def get_random_values(name_list):
     return [generators[name]() for name in name_list]
 
 def generate_sample_data(n=None, filename=None):
-    # Added 5th factor prior: Effort
-    # Rage/despair are modeled with higher burden than irritation.
-    emotions = {
-        'Anxiety':[ 'low', 'medium', 'obstruct', 'low', 'high'],
-        'Despair':[ 'high', 'high', 'obstruct', 'very_low', 'very_high'],
-        'Irritation': ['low', 'medium', 'obstruct', 'medium', 'medium'],
-        'Rage': ['high', 'high', 'obstruct', 'high', 'very_high']
-    }
+    # Effort prior is only included for effort variant.
+    if use_effort():
+        emotions = {
+            'Anxiety':[ 'low', 'medium', 'obstruct', 'low', 'high'],
+            'Despair':[ 'high', 'high', 'obstruct', 'very_low', 'very_high'],
+            'Irritation': ['low', 'medium', 'obstruct', 'medium', 'medium'],
+            'Rage': ['high', 'high', 'obstruct', 'high', 'very_high']
+        }
+        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power','Effort']
+    else:
+        emotions = {
+            'Anxiety':[ 'low', 'medium', 'obstruct', 'low'],
+            'Despair':[ 'high', 'high', 'obstruct', 'very_low'],
+            'Irritation': ['low', 'medium', 'obstruct', 'medium'],
+            'Rage': ['high', 'high', 'obstruct', 'high']
+        }
+        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power']
 
     with open(filename, 'w', newline='') as new_file:
         thewriter = csv.writer(new_file)
-        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power','Effort']
         thewriter.writerow(fieldnames)
         for emotion, values in emotions.items():
             for i in range(n):
