@@ -5,6 +5,9 @@ from scipy.stats import halfnorm
 from pathlib import Path
 #%%
 
+SEED = 9605
+np.random.seed(SEED)
+
 # Random Value Generators
 generators = {
     'very_low': lambda: round(halfnorm.rvs(loc=0, scale=0.05), 5),
@@ -21,16 +24,21 @@ def get_random_values(name_list):
     return [generators[name]() for name in name_list]
 
 def generate_sample_data(n=None, filename=None):
+    # 5th factor prior: Experience (novice/expert-like familiarity signal).
+    # Assumptions:
+    # - Despair/Anxiety: lower familiarity handling scenario outcomes.
+    # - Irritation: medium familiarity.
+    # - Rage: higher familiarity with confrontational response patterns.
     emotions = {
-        'Anxiety':[ 'low', 'medium', 'obstruct', 'low'],
-        'Despair':[ 'high', 'high', 'obstruct', 'very_low'],
-        'Irritation': ['low', 'medium', 'obstruct', 'medium'],
-        'Rage': ['high', 'high', 'obstruct', 'high']
+        'Anxiety':[ 'low', 'medium', 'obstruct', 'low', 'low'],
+        'Despair':[ 'high', 'high', 'obstruct', 'very_low', 'very_low'],
+        'Irritation': ['low', 'medium', 'obstruct', 'medium', 'medium'],
+        'Rage': ['high', 'high', 'obstruct', 'high', 'high']
     }
 
     with open(filename, 'w', newline='') as new_file:
         thewriter = csv.writer(new_file)
-        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power']
+        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power','Experience']
         thewriter.writerow(fieldnames)
         for emotion, values in emotions.items():
             for i in range(n):

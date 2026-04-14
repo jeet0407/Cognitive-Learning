@@ -98,5 +98,5 @@ for x in range (1):
 
     with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
         writer_object = csv.writer(new_file)
-        writer_object.writerow(['Irritation',a.sud_app,a.goal_app,a.cdc_app,a.power_app])
+        writer_object.writerow(['Irritation',a.sud_app,a.goal_app,a.cdc_app,a.power_app,a.appraise_experience()])
         new_file.close() 

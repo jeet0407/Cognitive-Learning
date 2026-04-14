@@ -3,6 +3,9 @@ from scipy.stats import halfnorm
 import numpy as np
 from pathlib import Path
 
+SEED = 9505
+np.random.seed(SEED)
+
 # Random Value Generators
 generators = {
     'very_low': lambda: round(halfnorm.rvs(loc=0, scale=0.05), 5),
@@ -19,19 +22,24 @@ def get_random_values(name_list):
     return [generators[name]() for name in name_list]
 
 def generate_sample_data(n=None, filename=None):
+    # 5th factor prior: Experience (novice/expert-like familiarity signal).
+    # Assumptions for Experience by emotion:
+    # - Boredom/Pride: higher familiarity with context or routine.
+    # - Fear/Sadness/Shame: lower familiarity (novice-like vulnerability).
+    # - Happiness/Joy: mid familiarity.
     emotions = {
-        'Boredom': ['very_low', 'low', 'open', 'medium'],
-        'Fear': ['high', 'high', 'obstruct', 'very_low'],
-        'Happiness': ['low', 'medium', 'high', 'open'],
-        'Joy': ['high', 'high', 'very_high', 'open'],
-        'Pride': ['open', 'high', 'high', 'open'],
-        'Sadness': ['low', 'high', 'obstruct', 'very_low'],
-        'Shame': ['open', 'high', 'open', 'open']
+        'Boredom': ['very_low', 'low', 'open', 'medium', 'high'],
+        'Fear': ['high', 'high', 'obstruct', 'very_low', 'low'],
+        'Happiness': ['low', 'medium', 'high', 'open', 'medium'],
+        'Joy': ['high', 'high', 'very_high', 'open', 'medium'],
+        'Pride': ['open', 'high', 'high', 'open', 'very_high'],
+        'Sadness': ['low', 'high', 'obstruct', 'very_low', 'low'],
+        'Shame': ['open', 'high', 'open', 'open', 'low']
     }
 
     with open(filename, 'w', newline='') as new_file:
         thewriter = csv.writer(new_file)
-        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power']
+        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power','Experience']
         thewriter.writerow(fieldnames)
         for emotion, values in emotions.items():
             for i in range(n):

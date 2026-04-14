@@ -137,6 +137,7 @@ class agent():
                 print("Goal relevance:\t", round(self.appraise_goal_relevance(),4))
                 print("Conduciveness:\t", round(self.appraise_conduciveness(),4))
                 print("Power:\t\t", round(self.appraise_power(),4))
+                print("Experience:\t", round(self.appraise_experience(),4))
                 # print("In standard:\t", round(self.appraise_instandard(),4))
                 return
 
@@ -171,3 +172,32 @@ class agent():
     def appraise_conduciveness(self):
         self.cdc_app = max(-1,min(1, self.td_error))/2+0.5
         return self.cdc_app
+
+    def appraise_experience(self):
+        """
+        Experience at appraisal state s*:
+            Experience = clip(N(s*) / (max_s N(s) + epsilon), 0, 1)
+        where N(s) = sum_a sum_s' T_hat(s, a, s').
+        If counts are missing/zero, Experience is set to 0.
+        """
+        epsilon = 1e-8
+        state_counts = {}
+        for state, action_map in self.t_hat.items():
+            count = 0.0
+            for next_state_counts in action_map.values():
+                count += float(sum(next_state_counts.values()))
+            state_counts[state] = count
+
+        if not state_counts:
+            self.exp_app = 0.0
+            return self.exp_app
+
+        max_count = max(state_counts.values())
+        chosen_state = self.mdp.chosen_state
+        chosen_count = state_counts.get(chosen_state, 0.0)
+
+        if max_count <= 0 or chosen_count <= 0:
+            self.exp_app = 0.0
+        else:
+            self.exp_app = max(0.0, min(1.0, chosen_count / (max_count + epsilon)))
+        return self.exp_app
