@@ -1,7 +1,5 @@
-Emotion   , Suddenness         , Goal_relevance, Conduciveness, Power
-
-Anxiety   , 0.19148085191480857,              1,           0.0, 0.0
-
-Despair   , 0.7984067197760074 ,              1,           0.0, 0.0
-Irritation, 0.20043438500228627,              1,           0.0, 0.3459237686669297
-Rage      , 0.7994693787309308 ,              1,           0.0, 0.7911729282648804
+Emotion,Suddenness,Goal_relevance,Conduciveness,Power,Responsibility
+Anxiety,0.1963803619638036,1,0.0,0.0,0.0
+Despair,0.7971400953301557,1,0.0,0.0,0.0
+Irritation,0.20027282027964077,0.41122297723265683,0.7056114886163284,0.5732520545504073,0.0
+Rage,0.8012747679091035,1,0.0,0.7934580804619923,0.0

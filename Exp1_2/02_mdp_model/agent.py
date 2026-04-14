@@ -130,6 +130,7 @@ class agent():
                 print("Goal relevance:\t", round(self.appraise_goal_relevance(),4))
                 print("Conduciveness:\t", round(self.appraise_conduciveness(),4))
                 print("Power:\t\t", round(self.appraise_power(),4))
+                print("Responsibility:\t", round(self.appraise_responsibility(),4))
                 # print("In standard:\t", round(self.appraise_instandard(),4))
                 return
 
@@ -164,6 +165,33 @@ class agent():
     def appraise_conduciveness(self):
         self.cdc_app = max(-1,min(1, self.td_error))/2+0.5
         return self.cdc_app
+
+    def appraise_responsibility(self):
+        """
+        Responsibility at appraisal state s with chosen action a_chosen:
+            responsibility = clip((max_a Q(s,a) - Q(s,a_chosen)) / (|max_a Q(s,a)| + epsilon), 0, 1)
+        If only one action exists at s, responsibility = 0.
+        """
+        epsilon = 1e-8
+        state = self.mdp.chosen_state
+        if state is None or state not in self.q:
+            self.rsp_app = 0.0
+            return self.rsp_app
+        q_state = self.q[state]
+        if len(q_state) <= 1:
+            self.rsp_app = 0.0
+            return self.rsp_app
+
+        max_q = max(q_state.values())
+        chosen_action = self.mdp.chosen_action
+        if chosen_action not in q_state:
+            self.rsp_app = 0.0
+            return self.rsp_app
+
+        chosen_q = q_state[chosen_action]
+        raw = (max_q - chosen_q) / (abs(max_q) + epsilon)
+        self.rsp_app = max(0.0, min(1.0, raw))
+        return self.rsp_app
 
 
     # def appraise_instandard(self):
