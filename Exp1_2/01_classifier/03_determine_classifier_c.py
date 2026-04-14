@@ -1,122 +1,55 @@
-#%%
-from sklearn import svm
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+import sys
 from pathlib import Path
-#%%
-# we have 70 rows of testing data. 7 emotion, 10 model result for each emotion. 
-def read_data(data_file):
-    data = pd.read_csv(data_file)
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency']].values
-    y = data['Emotion'].values
-    return X, y
 
-def predict_with_svm(c, X_train, y_train, X_test):
-    svc = svm.SVC(kernel='linear', C=c, probability=True).fit(X_train, y_train)
-    predictions = [svc.predict_proba(x.reshape(1, -1)).tolist()[0] for x in X_test]
-    return predictions
+import numpy as np
 
-def plot_c_precision(min_value, max_value, X_train, y_train, X_test, y_test):
-    c_values = np.linspace(min_value, max_value, 80)
-    avg_correct_prediction_rates = []
-    target_names = list(dict.fromkeys(y_train))
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 
-    for c in c_values:
-        predictions = predict_with_svm(c, X_train, y_train, X_test)
-        correct_prediction_rates = []
+from common.five_dim_pipeline import read_xy, run_rbf_grid_search, save_tuning, stratified_subsample
 
-        for i, prediction in enumerate(predictions):
-            target_index = target_names.index(y_test[i])
-            correct_prediction_rates.append(prediction[target_index])
-
-        avg_correct_prediction_rates.append(np.mean(correct_prediction_rates))
-
-    plt.plot(c_values, avg_correct_prediction_rates)
-    plt.xlabel('C value')
-    plt.ylabel('Average correct prediction rate')
-    plt.show()
+FREE_TARGET = {'mean': 0.4019302024931973, 'var': 0.027696655833540938}
+LIMIT_TARGET = {'mean': 0.8714285714285714, 'var': 0.11204081632653061}
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-X_training, y_training = read_data(BASE_DIR / 'data' / 'classifier_train.csv')
-X_testing, y_testing = read_data(BASE_DIR / 'data' / 'classifier_test.csv')
-plot_c_precision(0.006,0.025,X_training,y_training,X_testing,y_testing)
+X_training, y_training = read_xy(BASE_DIR / 'data' / 'classifier_train.csv')
+X_testing, y_testing = read_xy(BASE_DIR / 'data' / 'classifier_test.csv')
+X_tune, y_tune = stratified_subsample(X_training, y_training, max_per_class=160)
 
+c_grid = np.logspace(-3, -0.2, 8)
+gamma_grid = ['scale', 0.03, 0.1, 0.3]
 
+free_tuning, free_results = run_rbf_grid_search(
+    X_tune,
+    y_tune,
+    X_testing,
+    y_testing,
+    FREE_TARGET['mean'],
+    FREE_TARGET['var'],
+    c_grid,
+    gamma_grid,
+)
 
-# This is for plotting the classifier with a range of c, so that we can compare the y-axie
-# and figure out the suitable c value range for fitting human data.
-# From the human data (humandata_for_c.py), we get the result that 
-# for precision, mean = 0.4019302024931973, var = 0.027696655833540938
+limit_tuning, limit_results = run_rbf_grid_search(
+    X_tune,
+    y_tune,
+    X_testing,
+    y_testing,
+    LIMIT_TARGET['mean'],
+    LIMIT_TARGET['var'],
+    c_grid,
+    gamma_grid,
+)
 
-# Result:
+save_tuning(BASE_DIR / 'data' / 'rbf_tuning.json', free_tuning, limit_tuning)
 
-# For Exp1 human_free:
-# mean = 0.4019302024931973, var = 0.027696655833540938
-# c = 0.0032, variance 0.0002 
+print('Best free-rating candidates:')
+print(free_results.head(10).round(6).to_string(index=False))
+print('\nDerived free C mean / var:')
+print(round(free_tuning['c_mean'], 6), round(free_tuning['c_var'], 8))
 
-# For Exp1 human_limit:
-# mean = 0.8714285714285714 var = 0.11204081632653061
-# c=0.014, var = 0.0056
-
-
-#%%
-# predict_with_svm easier version
-# def svm_prediction(c, x_train, y_train, x_test):
-#     svc = svm.SVC(kernel='linear', C=c, probability=True).fit(x_train,y_train)
-#     prediction_full = []
-#     for i in range(len(x_test)):
-#         prediction = svc.predict_proba(x_test[i].reshape(1, -1))
-#         prediction = prediction.tolist()[0]
-#         prediction_full.append(prediction)
-#     return(prediction_full)
-# %%
-
-
-
-
-# for every c, we have 70 precision added from 70 rows, and then get the average precision
-#%%
-
-# Define a function to calculate entropy
-# def entropy(data):
-#     n_data = len(data)
-#     entropy_list = []
-#     for i in range (n_data):
-#         # probability list for which without 0, only valid numbers
-#         prob_list = [i for i in data[i] if i != 0]
-#         entropy = 0
-#         # Calculate entropy for this list
-#         for prob in prob_list:
-#             entropy -= prob * math.log(prob, 2)
-#         entropy_list.append(entropy)
-
-#     return entropy_list
-
-# Here is to find c according to entropy plot:
-
-
-# def plot_c_entropy(minv, maxv, x_train, y_train, x_test):
-#     x=[]
-#     y=[]
-#     for c in np.linspace(minv,maxv,100):
-#         prediction_res = svm_prediction(c,x_train,y_train,x_test)
-#         entropy_list = entropy(prediction_res)
-#         x.append(c)
-#         y.append(np.average(entropy_list))
-    
-#     plt.plot(x,y)
-#     plt.xlabel('C value')
-#     plt.ylabel('Entropy')
-#     plt.show()
-#     return(x,y)
-
-# x,y=plot_c_entropy(0.002,0.005,x_training,y_training,x_testing)
-
-# 1.72990941879756 0.2929363168935586
-# 47-69
-# 0.0034 - 0.004, mean = 0.0037, var = 0.0003
-
-#%%
-# https://scikit-learn.org/stable/modules/svm.html
-# https://people.revoledu.com/kardi/tutorial/Python/SVM+in+Python.html
+print('\nBest limited-rating candidates:')
+print(limit_results.head(10).round(6).to_string(index=False))
+print('\nDerived limit C mean / var:')
+print(round(limit_tuning['c_mean'], 6), round(limit_tuning['c_var'], 8))

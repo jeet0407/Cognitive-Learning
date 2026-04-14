@@ -1,56 +1,63 @@
-#%%
-import numpy as np
-import csv
-from scipy.stats import halfnorm
+import sys
 from pathlib import Path
-#%%
 
-# Random Value Generators
-generators = {
-    'very_low': lambda: round(halfnorm.rvs(loc=0, scale=0.05), 5),
-    'obstruct': lambda: round(halfnorm.rvs(loc=0, scale=0.05), 5),
-    'low': lambda: round(halfnorm.rvs(loc=0, scale=0.1), 5),
-    'medium': lambda: round(np.random.normal(loc=0.5, scale=0.05), 5),
-    'high': lambda: round(1 - halfnorm.rvs(loc=0, scale=0.1), 5),
-    'very_high': lambda: round(1 - halfnorm.rvs(loc=0, scale=0.05), 5),
-    'open': lambda: round(np.random.uniform(0, 1), 5)
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
+from common.five_dim_pipeline import generate_gmm_dataset
+
+EMOTION_PROFILES = {
+    'Anxiety': {
+        'weights': [0.65, 0.35],
+        'means': [
+            [0.28, 0.62, 0.10, 0.24, 0.86],
+            [0.18, 0.55, 0.15, 0.20, 0.78],
+        ],
+        'scales': [
+            [0.05, 0.06, 0.04, 0.05, 0.05],
+            [0.05, 0.06, 0.04, 0.05, 0.06],
+        ],
+    },
+    'Despair': {
+        'weights': [0.7, 0.3],
+        'means': [
+            [0.82, 0.90, 0.06, 0.06, 0.86],
+            [0.74, 0.82, 0.10, 0.10, 0.74],
+        ],
+        'scales': [
+            [0.05, 0.05, 0.04, 0.04, 0.05],
+            [0.06, 0.05, 0.04, 0.05, 0.06],
+        ],
+    },
+    'Irritation': {
+        'weights': [0.6, 0.4],
+        'means': [
+            [0.26, 0.56, 0.12, 0.48, 0.54],
+            [0.18, 0.48, 0.18, 0.56, 0.62],
+        ],
+        'scales': [
+            [0.05, 0.06, 0.05, 0.06, 0.05],
+            [0.05, 0.06, 0.05, 0.06, 0.05],
+        ],
+    },
+    'Rage': {
+        'weights': [0.7, 0.3],
+        'means': [
+            [0.86, 0.90, 0.06, 0.82, 0.90],
+            [0.76, 0.84, 0.10, 0.72, 0.82],
+        ],
+        'scales': [
+            [0.05, 0.05, 0.04, 0.06, 0.05],
+            [0.06, 0.05, 0.04, 0.06, 0.05],
+        ],
+    },
 }
-
-urgency_generators = {
-    'low_urgency': lambda: round(np.random.uniform(0.0, 0.3), 5),
-    'medium_urgency': lambda: round(np.random.uniform(0.4, 0.6), 5),
-    'high_urgency': lambda: round(np.random.uniform(0.8, 1.0), 5),
-}
-
-def get_random_values(name_list):
-    # Generate random values based on the name list
-    return [generators[name]() for name in name_list]
-
-def get_urgency_value(urgency_name):
-    return urgency_generators[urgency_name]()
-
-def generate_sample_data(n=None, filename=None):
-    emotions = {
-        'Anxiety':[ 'low', 'medium', 'obstruct', 'low', 'high_urgency'],
-        'Despair':[ 'high', 'high', 'obstruct', 'very_low', 'high_urgency'],
-        'Irritation': ['low', 'medium', 'obstruct', 'medium', 'medium_urgency'],
-        'Rage': ['high', 'high', 'obstruct', 'high', 'high_urgency']
-    }
-
-    with open(filename, 'w', newline='') as new_file:
-        thewriter = csv.writer(new_file)
-        fieldnames = ['Emotion','Suddenness','Goal_relevance','Conduciveness','Power','Urgency']
-        thewriter.writerow(fieldnames)
-        for emotion, values in emotions.items():
-            for i in range(n):
-                row = [emotion] + get_random_values(values[:4]) + [get_urgency_value(values[4])]
-                thewriter.writerow(row)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-filename_train = BASE_DIR / 'data' / 'classifier_train.csv'
-generate_sample_data(n=400, filename=filename_train)
+train_data = generate_gmm_dataset(EMOTION_PROFILES, samples_per_emotion=400)
+train_data.to_csv(BASE_DIR / 'data' / 'classifier_train.csv', index=False)
 
-filename_test = BASE_DIR / 'data' / 'classifier_test.csv'
-generate_sample_data(n=10, filename=filename_test)
-
+test_data = generate_gmm_dataset(EMOTION_PROFILES, samples_per_emotion=10, seed=101)
+test_data.to_csv(BASE_DIR / 'data' / 'classifier_test.csv', index=False)

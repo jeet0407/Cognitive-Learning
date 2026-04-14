@@ -1,54 +1,84 @@
-#%%
-from sklearn import svm
-import pandas as pd
-import numpy as np
-import csv
+import sys
 from pathlib import Path
-#%%
 
-def read_data(data_file):
-    data = pd.read_csv(data_file)
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency']].values
-    y = data['Emotion'].values
-    return X, y
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.svm import SVC
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
+from common.five_dim_pipeline import (
+    RANDOM_STATE,
+    load_tuning,
+    read_xy,
+    sampled_c_values,
+    write_probability_table,
+)
+
+BASELINE = {
+    'free': {'c_mean': 0.0032, 'c_var': 0.0002, 'sample_size': 42},
+    'limit': {'c_mean': 0.014, 'c_var': 0.0056, 'sample_size': 30},
+}
+
+
+def build_predictor(X_train, y_train, X_test, kernel, gamma_value, c_value):
+    pipeline = Pipeline(
+        [
+            ('scaler', MinMaxScaler()),
+            (
+                'svc',
+                SVC(
+                    kernel=kernel,
+                    C=float(c_value),
+                    gamma=gamma_value,
+                    probability=True,
+                    random_state=RANDOM_STATE,
+                ),
+            ),
+        ]
+    )
+    pipeline.fit(X_train, y_train)
+    return pipeline.predict_proba(X_test)
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-X_training, y_training = read_data(BASE_DIR / 'data' / 'classifier_train.csv')
-X_testing, y_testing = read_data(BASE_DIR / 'data' / 'model_result.csv')
-
+X_training, y_training = read_xy(BASE_DIR / 'data' / 'classifier_train.csv')
+X_testing, y_testing = read_xy(BASE_DIR / 'data' / 'model_result.csv')
 target_names = list(dict.fromkeys(y_training))
-
-def generate_prediction_result (sample, filename):
-# Write header to the output file
-    with open(filename, 'w') as new_file:
-        writer = csv.writer(new_file)
-        fieldnames = ['C', 'Story', 'Emotion', 'Val']
-        writer.writerow(fieldnames)
-
-    for c in sample:
-        svc = svm.SVC(kernel='linear', C=c, probability=True).fit(X_training,y_training)
-        for i in range(7):
-            for e, target_name in enumerate(target_names):
-                with open(filename, 'a', newline='') as new_file:
-                    writer = csv.writer(new_file)
-                    prob = svc.predict_proba(X_testing[i].reshape(1, -1))[0][e]
-                    writer.writerow([c, target_names[i], target_name, prob])
-
-# Generate random samples from a normal distribution for the C parameter
-# A normal distribution for c with mean = 0.0032, var = 0.0002
-# Define output filename
-filename_free = BASE_DIR / 'data' / 'svm_free_0.0032_var.csv'
-samples = np.random.normal(32, np.sqrt(2), 42) / 10000
-generate_prediction_result(samples,filename_free)
-
-# A normal distribution for c with mean = 0.014, var = 0.0056
-filename_limit = BASE_DIR / 'data' / 'svm_limit_0.014_var.csv'
-samples_limit = np.random.normal(140, np.sqrt(56), 30) / 10000
-generate_prediction_result(samples_limit,filename_limit)
+tuning = load_tuning(BASE_DIR / 'data' / 'rbf_tuning.json')
 
 
-#%%
-# https://scikit-learn.org/stable/modules/svm.html
-# https://people.revoledu.com/kardi/tutorial/Python/SVM+in+Python.html
+write_probability_table(
+    BASE_DIR / 'data' / 'svm_free_linear_baseline.csv',
+    y_testing,
+    target_names,
+    sampled_c_values(BASELINE['free']['c_mean'], BASELINE['free']['c_var'], BASELINE['free']['sample_size'], seed_offset=1),
+    lambda c_value: build_predictor(X_training, y_training, X_testing, 'linear', 'scale', c_value),
+)
 
-# %%
+write_probability_table(
+    BASE_DIR / 'data' / 'svm_limit_linear_baseline.csv',
+    y_testing,
+    target_names,
+    sampled_c_values(BASELINE['limit']['c_mean'], BASELINE['limit']['c_var'], BASELINE['limit']['sample_size'], seed_offset=2),
+    lambda c_value: build_predictor(X_training, y_training, X_testing, 'linear', 'scale', c_value),
+)
+
+write_probability_table(
+    BASE_DIR / 'data' / 'svm_free_rbf_opt.csv',
+    y_testing,
+    target_names,
+    sampled_c_values(tuning['free']['c_mean'], tuning['free']['c_var'], BASELINE['free']['sample_size'], seed_offset=3),
+    lambda c_value: build_predictor(X_training, y_training, X_testing, 'rbf', tuning['free']['best_gamma'], c_value),
+)
+
+write_probability_table(
+    BASE_DIR / 'data' / 'svm_limit_rbf_opt.csv',
+    y_testing,
+    target_names,
+    sampled_c_values(tuning['limit']['c_mean'], tuning['limit']['c_var'], BASELINE['limit']['sample_size'], seed_offset=4),
+    lambda c_value: build_predictor(X_training, y_training, X_testing, 'rbf', tuning['limit']['best_gamma'], c_value),
+)

@@ -1,67 +1,55 @@
-#%%
-from sklearn import svm
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+import sys
 from pathlib import Path
-#%%
-# we have 70 rows of testing data. 7 emotion, 10 model result for each emotion. 
-def read_data (data_file):
-    data = pd.read_csv(data_file)
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency']].values
-    y = data['Emotion'].values
-    return X,y
 
-def predict_with_svm(c,x_train, y_train, X_test):
-    svc = svm.SVC(kernel='linear', C=c, probability=True).fit(x_train,y_train)
-    predictions = [svc.predict_proba(x.reshape(1, -1)).tolist()[0] for x in X_test]
-    return predictions
+import numpy as np
 
-def plot_c_precision(min_value, max_value, X_train, y_train, X_test, y_test):
-    c_values = np.linspace(min_value, max_value, 80)
-    avg_correct_prediction_rates = []
-    target_names = list(dict.fromkeys(y_train))
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 
-    for c in c_values:
-        predictions = predict_with_svm(c, X_train, y_train, X_test)
-        correct_prediction_rates = []
+from common.five_dim_pipeline import read_xy, run_rbf_grid_search, save_tuning, stratified_subsample
 
-        for i, prediction in enumerate(predictions):
-            target_index = target_names.index(y_test[i])
-            correct_prediction_rates.append(prediction[target_index])
-
-        avg_correct_prediction_rates.append(np.mean(correct_prediction_rates))
-
-    plt.plot(c_values, avg_correct_prediction_rates)
-    plt.xlabel('C value')
-    plt.ylabel('Average correct prediction rate')
-    plt.show()
+FREE_TARGET = {'mean': 0.29215564961029417, 'var': 0.0067888217049672}
+LIMIT_TARGET = {'mean': 0.6617647058823529, 'var': 0.22383217993079588}
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-x_training, y_training = read_data(BASE_DIR / 'data' / 'classifier_train.csv')
-x_testing, y_testing = read_data(BASE_DIR / 'data' / 'classifier_test.csv')
-plot_c_precision(0.002,0.005,x_training,y_training,x_testing,y_testing)
-#%%
-# This is for plotting the classifier with a range of c, so that we can compare the y-axie
-# and figure out the suitable c value range for fitting human data.
-# From the human data (humandata_for_c.py), we get the result that 
-# for precision, mean = 0.4019302024931973, var = 0.027696655833540938
+X_training, y_training = read_xy(BASE_DIR / 'data' / 'classifier_train.csv')
+X_testing, y_testing = read_xy(BASE_DIR / 'data' / 'classifier_test.csv')
+X_tune, y_tune = stratified_subsample(X_training, y_training, max_per_class=160)
 
-# Here is to find c according to precision plot
-# x is a range of c value, y is the precision
+c_grid = np.logspace(-3, -0.2, 8)
+gamma_grid = ['scale', 0.03, 0.1, 0.3]
 
-# for every c, we have 70 precision added from 70 rows, and then get the average precision
+free_tuning, free_results = run_rbf_grid_search(
+    X_tune,
+    y_tune,
+    X_testing,
+    y_testing,
+    FREE_TARGET['mean'],
+    FREE_TARGET['var'],
+    c_grid,
+    gamma_grid,
+)
 
+limit_tuning, limit_results = run_rbf_grid_search(
+    X_tune,
+    y_tune,
+    X_testing,
+    y_testing,
+    LIMIT_TARGET['mean'],
+    LIMIT_TARGET['var'],
+    c_grid,
+    gamma_grid,
+)
 
+save_tuning(BASE_DIR / 'data' / 'rbf_tuning.json', free_tuning, limit_tuning)
 
-# For exp3 free-rating
-# mean = 0.29215564961029417 var = 0.0067888217049672
-# c=0.0013, var = 0.0001
-# For exp3 limit rating
-# mean = 0.6617647058823529 var = 0.22383217993079588
-# c=0.0034, var = 0.001
+print('Best free-rating candidates:')
+print(free_results.head(10).round(6).to_string(index=False))
+print('\nDerived free C mean / var:')
+print(round(free_tuning['c_mean'], 6), round(free_tuning['c_var'], 8))
 
-#%%
-
-# https://scikit-learn.org/stable/modules/svm.html
-# https://people.revoledu.com/kardi/tutorial/Python/SVM+in+Python.html
+print('\nBest limited-rating candidates:')
+print(limit_results.head(10).round(6).to_string(index=False))
+print('\nDerived limit C mean / var:')
+print(round(limit_tuning['c_mean'], 6), round(limit_tuning['c_var'], 8))
