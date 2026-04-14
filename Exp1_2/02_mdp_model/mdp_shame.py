@@ -101,5 +101,5 @@ a.simulate_episode(terminate= "E")
 with open(MODEL_RESULT_FILE,'a',newline='') as new_file:
     writer_object = csv.writer(new_file)
     writer_object.writerow(['Shame',a.sud_app,a.goal_app,a.cdc_app,
-        a.power_app,a.urg_app])
+        a.power_app,a.urg_app,a.effort_app])
     new_file.close() 

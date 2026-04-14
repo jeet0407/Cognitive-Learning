@@ -1,6 +1,7 @@
 import random
 from operator import itemgetter
 import csv
+from appraisal_engine import AppraisalEngine
 
 class agent():
     def __init__(self,mdp):
@@ -17,6 +18,7 @@ class agent():
         self.max_q_table = 0
         self.current_step_count = 0
         self.max_episode_steps = max(1, len(getattr(self.mdp, 'permitted_states', [])) - 1)
+        self.appraisal_engine = AppraisalEngine(effort_horizon=20)
         #Q table is for every State Action pair.
         
         for s in self.mdp.t.keys():
@@ -146,6 +148,7 @@ class agent():
                 print("Conduciveness:\t", round(self.cdc_app,4))
                 print("Power:\t\t", round(self.power_app,4))
                 print("Urgency:\t", round(self.urg_app,4))
+                print("Effort:\t\t", round(self.effort_app,4))
                 # print("In standard:\t", round(self.appraise_instandard(),4))
                 return
 
@@ -192,10 +195,40 @@ class agent():
         return self.urg_app
 
     def compute_appraisals(self, step_count, max_steps):
+        action_cost = None
+        action_costs = getattr(self.mdp, 'action_costs', None)
+        if isinstance(action_costs, dict) and self.mdp.chosen_action in action_costs:
+            max_cost = max(abs(v) for v in action_costs.values()) if action_costs else 0
+            if max_cost > 0:
+                action_cost = abs(action_costs[self.mdp.chosen_action]) / max_cost
+
+        (
+            self.sud_app,
+            self.goal_app,
+            self.cdc_app,
+            self.power_app,
+            self.urg_app,
+            self.effort_app,
+        ) = self.appraisal_engine.compute(
+            td_error=self.td_error,
+            t_hat=self.t_hat,
+            previous_state=self.mdp.previous_state,
+            previous_action=self.mdp.previous_action,
+            current_state=self.mdp.state,
+            q_table=self.q,
+            chosen_state=self.mdp.chosen_state,
+            chosen_action=self.mdp.chosen_action,
+            step_count=step_count,
+            max_steps=max_steps,
+            transitions=self.mdp.t,
+            action_cost=action_cost,
+        )
+
         return (
-            self.appraise_suddenness(),
-            self.appraise_goal_relevance(),
-            self.appraise_conduciveness(),
-            self.appraise_power(),
-            self.appraise_urgency(step_count, max_steps),
+            self.sud_app,
+            self.goal_app,
+            self.cdc_app,
+            self.power_app,
+            self.urg_app,
+            self.effort_app,
         )

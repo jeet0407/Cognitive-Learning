@@ -107,8 +107,8 @@ a.simulate_episode(terminate = "P")
 import csv
 with open(MODEL_RESULT_FILE,'w') as new_file:
     thewriter = csv.writer(new_file)
-    fieldnames = ['Emotion', 'Suddenness', 'Goal_relevance', 'Conduciveness','Power','Urgency']
+    fieldnames = ['Emotion', 'Suddenness', 'Goal_relevance', 'Conduciveness','Power','Urgency','Effort']
     thewriter.writerow(fieldnames)
-    thewriter.writerow(['Anxiety',a.sud_app,a.goal_app,a.cdc_app,a.power_app,a.urg_app])
+    thewriter.writerow(['Anxiety',a.sud_app,a.goal_app,a.cdc_app,a.power_app,a.urg_app,a.effort_app])
     new_file.close()
 # %%

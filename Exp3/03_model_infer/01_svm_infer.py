@@ -10,7 +10,7 @@ def read_data(data_file):
     data.columns = data.columns.str.strip()
     if 'Emotion' in data.columns:
         data['Emotion'] = data['Emotion'].astype(str).str.strip()
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency']].values
+    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency', 'Effort']].values
     y = data['Emotion'].values
     return X, y
 

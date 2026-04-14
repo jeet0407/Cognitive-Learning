@@ -8,7 +8,7 @@ from pathlib import Path
 
 def read_data(data_file):
     data = pd.read_csv(data_file)
-    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency']].values
+    X = data[['Suddenness', 'Goal_relevance', 'Conduciveness', 'Power', 'Urgency', 'Effort']].values
     y = data['Emotion'].values
     return X, y
 
